@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Karadeniz Usulü | Ne Yesek?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Karadeniz Renk Paleti */
+            --green-mount: #11998e;
+            --green-dark: #38ef7d;
+            --blue-sea: #2b5876;
+            --blue-deep: #4e4376;
+            --accent-gold: #f6d365;
+            
+            --glass-bg: rgba(255, 255, 255, 0.90);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            --radius: 24px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Montserrat', sans-serif;
+            transition: background 0.8s ease;
+            color: #2d3436;
+        }
+
+        /* Arkaplan Modları */
+        body.mode-breakfast {
+            background: linear-gradient(135deg, var(--green-mount), var(--green-dark)); /* Yayla Yeşili */
+        }
+        body.mode-dinner {
+            background: linear-gradient(135deg, var(--blue-sea), var(--blue-deep)); /* Karadeniz Mavisi */
+        }
+
+        /* Ana Kart */
+        .app-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Süsleme Yaprakları */
+        .leaf {
+            position: absolute;
+            font-size: 5rem;
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .l1 { top: -20px; left: -20px; transform: rotate(-45deg); }
+        .l2 { bottom: -20px; right: -20px; transform: rotate(135deg); }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 1.5rem 0;
+            color: #2d3436;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sekmeler (Tab) */
+        .tab-wrapper {
+            background: rgba(0,0,0,0.04);
+            border-radius: 50px;
+            padding: 4px;
+            display: flex;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 50px;
+            background: transparent;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #636e72;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            color: #2d3436;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Sonuç Alanı */
+        .result-container {
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .placeholder-text {
+            color: #a4b0be;
+            font-style: italic;
+            font-size: 0.95rem;
+        }
+
+        .food-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border-left: 5px solid transparent;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: none; /* JS ile açılacak */
+        }
+
+        /* Modlara göre kenar çizgisi rengi */
+        body.mode-breakfast .food-card { border-left-color: #11998e; }
+        body.mode-dinner .food-card { border-left-color: #2b5876; }
+
+        .food-card.show {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .emoji-box {
+            font-size: 2.2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .info-box {
+            text-align: left;
+            flex: 1;
+        }
+
+        .category-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #b2bec3;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .food-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3436;
+            line-height: 1.2;
+        }
+
+        /* Ana Buton */
+        .magic-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+
+        .magic-btn:active { transform: scale(0.98); }
+
+        body.mode-breakfast .magic-btn {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+        }
+
+        body.mode-dinner .magic-btn {
+            background: linear-gradient(45deg, #2b5876, #4e4376);
+        }
+
+        .history-msg {
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: #636e72;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+<body class="mode-breakfast">
+
+    <div class="leaf l1">🌿</div> 
+    <div class="leaf l2">🐟</div>
+
+    <div class="app-card">
+        <h1>Ne Yesek Uşağım?</h1>
+        
+        <div class="tab-wrapper">
+            <button class="tab-btn active" onclick="setMode('breakfast')" data-mode="breakfast">☀️ Kahvaltı</button>
+            <button class="tab-btn" onclick="setMode('dinner')" data-mode="dinner">🌙 Akşam Yemeği</button>
+        </div>
+
+        <div class="result-container" id="result-area">
+            <div class="placeholder-text" id="placeholder">Karadeniz usulü öneri için butona bas...</div>
+
+            <div class="food-card" id="card-breakfast">
+                <div class="emoji-box" id="bf-emoji">🍳</div>
+                <div class="info-box">
+                    <span class="category-label">Sabah Enerjisi</span>
+                    <div class="food-name" id="bf-name">...</div>
+                </div>
+            </div>
+
+            <div class="food-card" id="card-soup">
+                <div class="emoji-box" id="soup-emoji">🥣</div>
+                <div class="info-box">
+                    <span class="category-label">Sıcak Başlangıç</span>
+                    <div class="food-name" id="soup-name">...</div>
+                </div>
+            </div>
+
+            <div class="food-card" id="card-main">
+                <div class="emoji-box" id="main-emoji">🥘</div>
+                <div class="info-box">
+                    <span class="category-label">Ana Öğün</span>
+                    <div class="food-name" id="main-name">...</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="magic-btn" onclick="rollDice()" id="action-btn">Sabahlığı Seç</button>
+        <div class="history-msg" id="msg-box"></div>
+    </div>
+
+    <script>
+        /* --- VERİ HAVUZU (Karadeniz + Pratik Öğrenci) --- */
+        
+        const breakfastItems = [
+            { name: "Kuymak (Mıhlama)", emoji: "🧀" },
+            { name: "Turşu Kavurması & Çay", emoji: "🥒" },
+            { name: "Kaygana (Karadeniz Krebi)", emoji: "🥞" },
+            { name: "Mısır Ekmeği & Yoğurt", emoji: "🌽" },
+            { name: "Menemen (Bol Soğanlı)", emoji: "🍳" },
+            { name: "Sahanda Tereyağlı Yumurta", emoji: "🍳" },
+            { name: "Sucuklu Yumurta", emoji: "🌭" },
+            { name: "Haşlanmış Yumurta & Köy Peyniri", emoji: "🥚" },
+            { name: "Patatesli Omlet", emoji: "🥔" },
+            { name: "Kaşarlı Tost", emoji: "🥪" },
+            { name: "Simit & Krem Peynir", emoji: "🥯" },
+            { name: "Soğuk Sandviç", emoji: "🥬" },
+            { name: "Yağda Yumurta", emoji: "🍳" },
+            { name: "Tereyağlı Ballı Ekmek", emoji: "🍯" }
+        ];
+
+        const soups = [
+            { name: "Kara Lahana Çorbası", emoji: "🥬" }, // Karadeniz Klasiği
+            { name: "Mısır Çorbası", emoji: "🌽" },      // Karadeniz Klasiği
+            { name: "Mercimek Çorbası", emoji: "🥣" },
+            { name: "Yayla Çorbası", emoji: "🥛" },
+            { name: "Tel Şehriye Çorbası", emoji: "🍜" },
+            { name: "Tarhana Çorbası", emoji: "🥄" },
+            { name: "Ezogelin Çorbası", emoji: "🍲" },
+            { name: "Isırgan Çorbası", emoji: "🌿" },    // Yöresel
+            { name: "Domates Çorbası", emoji: "🍅" }
+        ];
+
+        const dinners = [
+            // Yöresel Dokunuşlar (Kolay versiyonlar)
+            { name: "Hamsi Tava & Salata", emoji: "🐟" },
+            { name: "Kara Lahana Sarması (Etli)", emoji: "🥬" },
+            { name: "Turşu Kavurması & Pilav", emoji: "🥒" },
+            { name: "Akçaabat Usulü Köfte", emoji: "🍖" },
+            { name: "Taze Fasulye (Diblesi)", emoji: "🥗" },
+            { name: "Hamsili Ekmek & Çay", emoji: "🍞" },
+
+            // Genel Pratik Yemekler
+            { name: "Tavuk Sote", emoji: "🍗" },
+            { name: "Salçalı Makarna", emoji: "🍝" },
+            { name: "Kuru Fasulye & Pilav", emoji: "🥘" },
+            { name: "Ispanak Yemeği (Yoğurtlu)", emoji: "🌿" },
+            { name: "Patates Oturtma", emoji: "🥔" },
+            { name: "Kıymalı Makarna", emoji: "🍝" },
+            { name: "Ton Balıklı Salata", emoji: "🥗" },
+            { name: "Sosisli Makarna", emoji: "🌭" },
+            { name: "Hazır Mantı", emoji: "🥟" },
+            { name: "Fırında Tavuk Baget", emoji: "🍗" },
+            { name: "Nohut Yemeği", emoji: "🍲" }
+        ];
+
+        /* --- SİSTEM DEĞİŞKENLERİ --- */
+        let currentMode = 'breakfast';
+        const bufferSize = 6;
+        let sessionHistory = { breakfast: [], dinner: [] };
+
+        /* --- UI FONKSİYONLARI --- */
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Body Class (Renk değişimi için)
+            document.body.className = `mode-${mode}`;
+            
+            // Tab Aktifliği
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.dataset.mode === mode) btn.classList.add('active');
+            });
+
+            // Buton Yazısı
+            const btn = document.getElementById('action-btn');
+            btn.innerText = mode === 'breakfast' ? 'Sabahlığı Seç' : 'Akşam Menüsü Kur';
+
+            // Alanı Temizle
+            resetDisplay();
+        }
+
+        function resetDisplay() {
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('msg-box').innerText = '';
+            
+            ['card-breakfast', 'card-soup', 'card-main'].forEach(id => {
+                document.getElementById(id).classList.remove('show');
+            });
+        }
+
+        /* --- MANTIK --- */
+        function getDateKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        }
+        
+        function getYesterdayKey() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        }
+
+        function getSmartChoice(pool, type, yesterdayForbidden) {
+            // 1. Filtrele: Dünkü yemeği ve son 6 tıklamayı çıkar
+            let candidates = pool.filter(item => {
+                const isYesterday = (item.name === yesterdayForbidden);
+                const isInSession = sessionHistory[type].includes(item.name);
+                return !isYesterday && !isInSession;
+            });
+
+            // 2. Eğer liste bittiyse session geçmişini sıfırla (sonsuz döngü olmasın)
+            if (candidates.length === 0) {
+                sessionHistory[type] = [];
+                candidates = pool.filter(item => item.name !== yesterdayForbidden);
+            }
+
+            // 3. Rastgele Seç
+            const choice = candidates[Math.floor(Math.random() * candidates.length)];
+
+            // 4. Hafızaya Ekle
+            sessionHistory[type].push(choice.name);
+            if(sessionHistory[type].length > bufferSize) sessionHistory[type].shift();
+
+            return choice;
+        }
+
+        function rollDice() {
+            const today = getDateKey();
+            const yesterday = getYesterdayKey();
+            const msgBox = document.getElementById('msg-box');
+            
+            resetDisplay(); // Önce temizle
+            document.getElementById('placeholder').style.display = 'none';
+
+            if (currentMode === 'breakfast') {
+                // --- KAHVALTI ---
+                const history = JSON.parse(localStorage.getItem('hist_bf')) || {};
+                const forbidden = (history.date === yesterday) ? history.item : null;
+
+                const choice = getSmartChoice(breakfastItems, 'breakfast', forbidden);
+
+                // UI Göster
+                setTimeout(() => {
+                    document.getElementById('bf-emoji').innerText = choice.emoji;
+                    document.getElementById('bf-name').innerText = choice.name;
+                    document.getElementById('card-breakfast').classList.add('show');
+                    
+                    if(forbidden) msgBox.innerText = `Not: Dün sabah yediğin (${forbidden}) listeden çıkarıldı.`;
+                    else msgBox.innerText = "Afiyet olsun!";
+
+                    localStorage.setItem('hist_bf', JSON.stringify({ date: today, item: choice.name }));
+                }, 100);
+
+            } else {
+                // --- AKŞAM ---
+                const history = JSON.parse(localStorage.getItem('hist_dn')) || {};
+                const forbidden = (history.date === yesterday) ? history.main : null;
+
+                const soup = soups[Math.floor(Math.random() * soups.length)];
+                const main = getSmartChoice(dinners, 'dinner', forbidden);
+
+                // UI Göster (Sırayla)
+                setTimeout(() => {
+                    // Çorba
+                    document.getElementById('soup-emoji').innerText = soup.emoji;
+                    document.getElementById('soup-name').innerText = soup.name;
+                    document.getElementById('card-soup').classList.add('show');
+
+                    // Ana Yemek
+                    setTimeout(() => {
+                        document.getElementById('main-emoji').innerText = main.emoji;
+                        document.getElementById('main-name').innerText = main.name;
+                        document.getElementById('card-main').classList.add('show');
+                    }, 150);
+
+                    if(forbidden) msgBox.innerText = `Not: Dün akşamki (${forbidden}) listeden çıkarıldı.`;
+                    else msgBox.innerText = "Hadi yine iyisin, menü hazır!";
+
+                    localStorage.setItem('hist_dn', JSON.stringify({ date: today, main: main.name }));
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
